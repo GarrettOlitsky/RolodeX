@@ -1,0 +1,90 @@
+/* RolodeX App - Inspired by PhoneSlips */
+
+// Features to implement:
+// 1. Contact & Message Entry (like PhoneSlips)
+// 2. Search Functionality
+// 3. Export to CSV
+// 4. Cloud Sync Capability (localStorage for now)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RolodeX App</title>
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px;
+    }
+    .entry {
+      background: #fff;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>RolodeX - Phone Message Tracker</h1>
+  <input type="text" id="contact" placeholder="Contact Name">
+  <input type="text" id="message" placeholder="Message">
+  <button onclick="addEntry()">Add Entry</button>
+  <button onclick="exportCSV()">Export to CSV</button>
+  <input type="text" id="search" placeholder="Search..." oninput="searchEntries()">
+  <div id="entries"></div>
+
+  <script>
+    let entries = JSON.parse(localStorage.getItem('rolodexEntries')) || [];
+
+    function saveEntries() {
+      localStorage.setItem('rolodexEntries', JSON.stringify(entries));
+    }
+
+    function addEntry() {
+      const contact = document.getElementById('contact').value;
+      const message = document.getElementById('message').value;
+      if (contact && message) {
+        entries.push({contact, message});
+        saveEntries();
+        renderEntries();
+      }
+    }
+
+    function renderEntries(filter = '') {
+      const list = document.getElementById('entries');
+      list.innerHTML = '';
+      entries.filter(e => e.contact.includes(filter) || e.message.includes(filter))
+        .forEach((entry, index) => {
+          const div = document.createElement('div');
+          div.className = 'entry';
+          div.innerHTML = `<strong>${entry.contact}:</strong> ${entry.message}`;
+          list.appendChild(div);
+        });
+    }
+
+    function searchEntries() {
+      const filter = document.getElementById('search').value;
+      renderEntries(filter);
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Contact,Message\n" +
+        entries.map(e => `${e.contact},${e.message}`).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "rolodex_entries.csv");
+      document.body.appendChild(link);
+      link.click();
+    }
+
+    renderEntries();
+  </script>
+</body>
+</html>
