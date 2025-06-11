@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,77 +7,150 @@
   <title>RolodeX App</title>
   <style>
     body {
-      background-color: #f4f4f4;
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      background-color: #1e1e2f;
+      color: #f4f4f4;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      height: 100vh;
+      margin: 0;
     }
-    input, button {
-      padding: 8px;
-      margin: 5px;
-    }
-    .entry {
-      background: #fff;
+    #sidebar {
+      width: 250px;
+      background-color: #292940;
       padding: 10px;
+      overflow-y: auto;
+    }
+    #sidebar h2 {
+      text-align: center;
+      color: #fff;
+    }
+    .contact {
+      padding: 8px;
+      background: #3a3a5c;
       margin: 5px 0;
-      border: 1px solid #ccc;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .contact:hover {
+      background: #505070;
+    }
+    #details {
+      flex-grow: 1;
+      padding: 20px;
+      background-color: #2e2e42;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
     }
   </style>
 </head>
 <body>
-  <h1>RolodeX - Phone Message Tracker</h1>
-  <input type="text" id="contact" placeholder="Contact Name">
-  <input type="text" id="message" placeholder="Message">
-  <button onclick="addEntry()">Add Entry</button>
-  <button onclick="exportCSV()">Export to CSV</button>
-  <input type="text" id="search" placeholder="Search..." oninput="searchEntries()">
-  <div id="entries"></div>
+  <div id="sidebar">
+    <h2>Contacts</h2>
+    <input type="text" id="search" placeholder="Search..." oninput="renderContacts()">
+    <div id="contactList"></div>
+    <input type="text" id="newContact" placeholder="Add Contact">
+    <button onclick="addContact()">Add</button>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="exportPDF()">Export PDF</button>
+  </div>
+  <div id="details">
+    <h2>Contact Details</h2>
+    <input type="text" id="contactName" placeholder="Name">
+    <textarea id="contactMessage" placeholder="Message"></textarea>
+    <button onclick="saveDetails()">Save</button>
+  </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
   <script>
-    let entries = JSON.parse(localStorage.getItem('rolodexEntries')) || [];
+    let contacts = JSON.parse(localStorage.getItem('rolodexContacts')) || [];
+    let selectedContact = null;
 
-    function saveEntries() {
-      localStorage.setItem('rolodexEntries', JSON.stringify(entries));
+    function saveContacts() {
+      localStorage.setItem('rolodexContacts', JSON.stringify(contacts));
     }
 
-    function addEntry() {
-      const contact = document.getElementById('contact').value;
-      const message = document.getElementById('message').value;
-      if (contact && message) {
-        entries.push({contact, message});
-        saveEntries();
-        renderEntries();
+    function addContact() {
+      const newName = document.getElementById('newContact').value.trim();
+      if (newName && !contacts.find(c => c.name === newName)) {
+        contacts.push({name: newName, message: ''});
+        saveContacts();
+        renderContacts();
+        document.getElementById('newContact').value = '';
       }
     }
 
-    function renderEntries(filter = '') {
-      const list = document.getElementById('entries');
+    function renderContacts() {
+      const list = document.getElementById('contactList');
+      const filter = document.getElementById('search').value.toLowerCase();
       list.innerHTML = '';
-      entries.filter(e => e.contact.includes(filter) || e.message.includes(filter))
-        .forEach((entry, index) => {
-          const div = document.createElement('div');
-          div.className = 'entry';
-          div.innerHTML = `<strong>${entry.contact}:</strong> ${entry.message}`;
-          list.appendChild(div);
-        });
+      contacts.filter(c => c.name.toLowerCase().includes(filter))
+              .forEach((contact, index) => {
+        const div = document.createElement('div');
+        div.className = 'contact';
+        div.innerText = contact.name;
+        div.onclick = () => selectContact(index);
+        list.appendChild(div);
+      });
     }
 
-    function searchEntries() {
-      const filter = document.getElementById('search').value;
-      renderEntries(filter);
+    function selectContact(index) {
+      selectedContact = index;
+      document.getElementById('contactName').value = contacts[index].name;
+      document.getElementById('contactMessage').value = contacts[index].message;
+    }
+
+    function saveDetails() {
+      if (selectedContact !== null) {
+        contacts[selectedContact].name = document.getElementById('contactName').value;
+        contacts[selectedContact].message = document.getElementById('contactMessage').value;
+        saveContacts();
+        renderContacts();
+      }
     }
 
     function exportCSV() {
-      let csvContent = "data:text/csv;charset=utf-8,Contact,Message\n" +
-        entries.map(e => `${e.contact},${e.message}`).join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "rolodex_entries.csv");
-      document.body.appendChild(link);
-      link.click();
+      let csv = 'Name,Message\n';
+      contacts.forEach(c => {
+        csv += `"${c.name}","${c.message}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'contacts.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
-    renderEntries();
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text('RolodeX Contacts', 10, 10);
+      let y = 20;
+      contacts.forEach((c, index) => {
+        doc.text(`${index + 1}. Name: ${c.name}`, 10, y);
+        y += 10;
+        doc.text(`   Message: ${c.message}`, 10, y);
+        y += 10;
+      });
+      doc.save('contacts.pdf');
+    }
+
+    renderContacts();
   </script>
 </body>
 </html>
