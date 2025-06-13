@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>RolodeX App</title>
 <style>
+  /* Your existing CSS, plus color blind mode styles */
   body {
     background-color: #1e1e2f;
     color: #f4f4f4;
@@ -12,7 +13,6 @@
     display: flex;
     height: 100vh;
     margin: 0;
-    transition: background-color 0.3s, color 0.3s;
   }
   #sidebar {
     width: 250px;
@@ -30,42 +30,25 @@
     margin: 5px 0;
     cursor: pointer;
     border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
   .contact:hover {
     background: #505070;
-  }
-  .delete-btn {
-    color: #ff5c5c;
-    font-weight: bold;
-    cursor: pointer;
-    margin-left: 10px;
-    user-select: none;
   }
   #details {
     flex-grow: 1;
     padding: 20px;
     background-color: #2e2e42;
   }
-  input, textarea, button {
+  input, textarea, button, select {
     width: 100%;
     padding: 10px;
     margin: 8px 0;
     border: none;
     border-radius: 4px;
   }
-  input#contactName {
-    width: 50%;
-  }
-  input#contactAddress,
-  input#contactPhone,
-  input#contactEmail {
-    width: 70%;
-  }
-  textarea#contactMessage {
-    height: 120px;
+  textarea {
+    height: 100px;
+    resize: vertical;
   }
   button {
     background-color: #4caf50;
@@ -79,255 +62,391 @@
     position: fixed;
     bottom: 10px;
     right: 10px;
-    background: #292940;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    font-size: 28px;
     cursor: pointer;
-    color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
+    color: #ccc;
     user-select: none;
   }
   #settingsPanel {
     position: fixed;
-    bottom: 60px;
+    bottom: 50px;
     right: 10px;
     background: #292940;
-    border-radius: 8px;
     padding: 15px;
-    width: 240px;
+    border-radius: 8px;
     display: none;
-    box-shadow: 0 0 10px #0008;
-    color: #f4f4f4;
+    width: 250px;
+    color: #eee;
   }
   #settingsPanel label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    display: block;
+    margin-bottom: 10px;
   }
   #settingsPanel button {
-    background-color: #e63946;
+    width: auto;
     margin-top: 10px;
   }
-  /* Color Blind Mode Styles */
-  body.colorblind {
-    background-color: #000 !important;
-    color: #ffff00 !important;
+  /* Color Blind Mode style example */
+  body.color-blind-mode {
+    background-color: #1a1a1a;
+    color: #ffffd1;
   }
-  body.colorblind #sidebar {
-    background-color: #003300 !important;
+  body.color-blind-mode #sidebar {
+    background-color: #333333;
   }
-  body.colorblind .contact {
-    background-color: #004d00 !important;
+  body.color-blind-mode #details {
+    background-color: #444444;
   }
-  body.colorblind .contact:hover {
-    background-color: #006600 !important;
+  body.color-blind-mode .contact {
+    background-color: #555555;
   }
-  body.colorblind #details {
-    background-color: #002200 !important;
-  }
-  body.colorblind button {
-    background-color: #ffcc00 !important;
-    color: #000 !important;
-  }
-  body.colorblind button:hover {
-    background-color: #ffdb4d !important;
-  }
-  body.colorblind #settingsCog {
-    background-color: #003300 !important;
-    color: #ffff00 !important;
-  }
-  body.colorblind #settingsPanel {
-    background-color: #003300 !important;
-    color: #ffff00 !important;
+  body.color-blind-mode .contact:hover {
+    background-color: #777777;
   }
 </style>
 </head>
 <body>
   <div id="sidebar">
-    <h2>RolodeX</h2>
+    <h2 id="sidebarTitle">RolodeX</h2>
     <input type="text" id="search" placeholder="Search..." oninput="renderContacts()" />
+    <button id="toggleListBtn" onclick="toggleContactList()">Contact List ▼</button>
     <div id="contactList"></div>
     <input type="text" id="newContact" placeholder="Add Contact" />
-    <button onclick="addContact()">Add</button>
-    <button onclick="exportCSV()">Export CSV</button>
-    <button onclick="exportPDF()">Export PDF</button>
+    <button onclick="addContact()" id="addBtn">Add</button>
+    <button onclick="exportCSV()" id="exportCSVBtn">Export CSV</button>
+    <button onclick="exportPDF()" id="exportPDFBtn">Export PDF</button>
   </div>
+
   <div id="details">
-    <h2>Contact Details</h2>
+    <h2 id="detailsTitle">Contact Details</h2>
     <input type="text" id="contactName" placeholder="Name" />
     <textarea id="contactMessage" placeholder="Message"></textarea>
     <input type="text" id="contactAddress" placeholder="Address" />
     <input type="text" id="contactPhone" placeholder="Phone Number" />
     <input type="text" id="contactEmail" placeholder="Email" />
-    <button onclick="saveDetails()">Save</button>
+    <button onclick="saveDetails()" id="saveBtn">Save</button>
   </div>
 
   <div id="settingsCog" title="Settings" onclick="toggleSettings()">&#9881;</div>
   <div id="settingsPanel">
     <label>
-      <span>Color Blind Mode</span>
+      <span id="colorBlindLabel">Color Blind Mode</span>
       <input type="checkbox" id="colorBlindToggle" onchange="toggleColorBlind()" />
     </label>
     <label>
-      <span>Change Language</span>
+      <span id="languageLabel">Change Language</span>
       <select id="languageSelect" onchange="changeLanguage()">
         <option value="en" selected>English</option>
         <option value="es">Spanish</option>
         <option value="fr">French</option>
         <option value="de">German</option>
-        <!-- add more languages if you want -->
+        <option value="ru">Russian</option>
+        <option value="it">Italian</option>
+        <option value="zh">Mandarin</option>
+        <option value="ja">Japanese</option>
       </select>
     </label>
-    <button onclick="clearAllData()">Clear All Data</button>
+    <button onclick="clearAllData()" id="clearDataBtn">Clear All Data</button>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-  <script>
-    let contacts = JSON.parse(localStorage.getItem('rolodexContacts')) || [];
-    let selectedContact = null;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script>
+  let contacts = JSON.parse(localStorage.getItem('rolodexContacts')) || [];
+  let selectedContact = null;
+  let contactListVisible = true;
 
-    function saveContacts() {
-      localStorage.setItem('rolodexContacts', JSON.stringify(contacts));
+  // Translations dictionary:
+  const translations = {
+    en: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "Search...",
+      toggleListBtn: "Contact List ▼",
+      newContactPlaceholder: "Add Contact",
+      addBtn: "Add",
+      exportCSVBtn: "Export CSV",
+      exportPDFBtn: "Export PDF",
+      detailsTitle: "Contact Details",
+      contactNamePlaceholder: "Name",
+      contactMessagePlaceholder: "Message",
+      contactAddressPlaceholder: "Address",
+      contactPhonePlaceholder: "Phone Number",
+      contactEmailPlaceholder: "Email",
+      saveBtn: "Save",
+      colorBlindLabel: "Color Blind Mode",
+      languageLabel: "Change Language",
+      clearDataBtn: "Clear All Data",
+      confirmClearData: "Are you sure you want to clear all data? This cannot be undone.",
+      confirmDelete: "Are you sure you want to delete this contact?"
+    },
+    es: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "Buscar...",
+      toggleListBtn: "Lista de Contactos ▼",
+      newContactPlaceholder: "Agregar Contacto",
+      addBtn: "Agregar",
+      exportCSVBtn: "Exportar CSV",
+      exportPDFBtn: "Exportar PDF",
+      detailsTitle: "Detalles del Contacto",
+      contactNamePlaceholder: "Nombre",
+      contactMessagePlaceholder: "Mensaje",
+      contactAddressPlaceholder: "Dirección",
+      contactPhonePlaceholder: "Número de Teléfono",
+      contactEmailPlaceholder: "Correo Electrónico",
+      saveBtn: "Guardar",
+      colorBlindLabel: "Modo Daltónico",
+      languageLabel: "Cambiar Idioma",
+      clearDataBtn: "Borrar Todos los Datos",
+      confirmClearData: "¿Seguro que quieres borrar todos los datos? Esto no se puede deshacer.",
+      confirmDelete: "¿Seguro que quieres eliminar este contacto?"
+    },
+    fr: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "Chercher...",
+      toggleListBtn: "Liste de Contacts ▼",
+      newContactPlaceholder: "Ajouter un Contact",
+      addBtn: "Ajouter",
+      exportCSVBtn: "Exporter CSV",
+      exportPDFBtn: "Exporter PDF",
+      detailsTitle: "Détails du Contact",
+      contactNamePlaceholder: "Nom",
+      contactMessagePlaceholder: "Message",
+      contactAddressPlaceholder: "Adresse",
+      contactPhonePlaceholder: "Numéro de Téléphone",
+      contactEmailPlaceholder: "Email",
+      saveBtn: "Sauvegarder",
+      colorBlindLabel: "Mode Daltonien",
+      languageLabel: "Changer de Langue",
+      clearDataBtn: "Effacer Toutes les Données",
+      confirmClearData: "Êtes-vous sûr de vouloir effacer toutes les données ? Ceci est irréversible.",
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer ce contact ?"
+    },
+    de: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "Suchen...",
+      toggleListBtn: "Kontaktliste ▼",
+      newContactPlaceholder: "Kontakt hinzufügen",
+      addBtn: "Hinzufügen",
+      exportCSVBtn: "CSV exportieren",
+      exportPDFBtn: "PDF exportieren",
+      detailsTitle: "Kontaktdetails",
+      contactNamePlaceholder: "Name",
+      contactMessagePlaceholder: "Nachricht",
+      contactAddressPlaceholder: "Adresse",
+      contactPhonePlaceholder: "Telefonnummer",
+      contactEmailPlaceholder: "E-Mail",
+      saveBtn: "Speichern",
+      colorBlindLabel: "Farbenblind-Modus",
+      languageLabel: "Sprache ändern",
+      clearDataBtn: "Alle Daten löschen",
+      confirmClearData: "Sind Sie sicher, dass Sie alle Daten löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+      confirmDelete: "Sind Sie sicher, dass Sie diesen Kontakt löschen möchten?"
+    },
+    ru: {
+      sidebarTitle: "Ролодекс",
+      searchPlaceholder: "Поиск...",
+      toggleListBtn: "Список контактов ▼",
+      newContactPlaceholder: "Добавить контакт",
+      addBtn: "Добавить",
+      exportCSVBtn: "Экспорт CSV",
+      exportPDFBtn: "Экспорт PDF",
+      detailsTitle: "Данные контакта",
+      contactNamePlaceholder: "Имя",
+      contactMessagePlaceholder: "Сообщение",
+      contactAddressPlaceholder: "Адрес",
+      contactPhonePlaceholder: "Телефон",
+      contactEmailPlaceholder: "Электронная почта",
+      saveBtn: "Сохранить",
+      colorBlindLabel: "Режим для дальтоников",
+      languageLabel: "Выбрать язык",
+      clearDataBtn: "Очистить все данные",
+      confirmClearData: "Вы уверены, что хотите очистить все данные? Это действие нельзя отменить.",
+      confirmDelete: "Вы уверены, что хотите удалить этот контакт?"
+    },
+    it: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "Cerca...",
+      toggleListBtn: "Elenco Contatti ▼",
+      newContactPlaceholder: "Aggiungi Contatto",
+      addBtn: "Aggiungi",
+      exportCSVBtn: "Esporta CSV",
+      exportPDFBtn: "Esporta PDF",
+      detailsTitle: "Dettagli Contatto",
+      contactNamePlaceholder: "Nome",
+      contactMessagePlaceholder: "Messaggio",
+      contactAddressPlaceholder: "Indirizzo",
+      contactPhonePlaceholder: "Numero di Telefono",
+      contactEmailPlaceholder: "Email",
+      saveBtn: "Salva",
+      colorBlindLabel: "Modalità daltonica",
+      languageLabel: "Cambia lingua",
+      clearDataBtn: "Cancella tutti i dati",
+      confirmClearData: "Sei sicuro di voler cancellare tutti i dati? Questa azione non può essere annullata.",
+      confirmDelete: "Sei sicuro di voler eliminare questo contatto?"
+    },
+    zh: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "搜索...",
+      toggleListBtn: "联系人列表 ▼",
+      newContactPlaceholder: "添加联系人",
+      addBtn: "添加",
+      exportCSVBtn: "导出CSV",
+      exportPDFBtn: "导出PDF",
+      detailsTitle: "联系人详情",
+      contactNamePlaceholder: "姓名",
+      contactMessagePlaceholder: "留言",
+      contactAddressPlaceholder: "地址",
+      contactPhonePlaceholder: "电话号码",
+      contactEmailPlaceholder: "电子邮件",
+      saveBtn: "保存",
+      colorBlindLabel: "色盲模式",
+      languageLabel: "更改语言",
+      clearDataBtn: "清除所有数据",
+      confirmClearData: "您确定要清除所有数据吗？此操作不可撤销。",
+      confirmDelete: "您确定要删除此联系人吗？"
+    },
+    ja: {
+      sidebarTitle: "RolodeX",
+      searchPlaceholder: "検索...",
+      toggleListBtn: "連絡先リスト ▼",
+      newContactPlaceholder: "連絡先を追加",
+      addBtn: "追加",
+      exportCSVBtn: "CSVをエクスポート",
+      exportPDFBtn: "PDFをエクスポート",
+      detailsTitle: "連絡先の詳細",
+      contactNamePlaceholder: "名前",
+      contactMessagePlaceholder: "メッセージ",
+      contactAddressPlaceholder: "住所",
+      contactPhonePlaceholder: "電話番号",
+      contactEmailPlaceholder: "メール",
+      saveBtn: "保存",
+      colorBlindLabel: "色覚異常モード",
+      languageLabel: "言語を変更",
+      clearDataBtn: "すべてのデータをクリア",
+      confirmClearData: "すべてのデータをクリアしてもよろしいですか？この操作は元に戻せません。",
+      confirmDelete: "この連絡先を削除してもよろしいですか？"
     }
+  };
 
-    function addContact() {
-      const newName = document.getElementById('newContact').value.trim();
-      if (newName && !contacts.find(c => c.name === newName)) {
-        contacts.push({ name: newName, message: '', address: '', phone: '', email: '' });
-        saveContacts();
-        renderContacts();
-        document.getElementById('newContact').value = '';
-      }
+  // Save contacts to localStorage
+  function saveContacts() {
+    localStorage.setItem('rolodexContacts', JSON.stringify(contacts));
+  }
+
+  // Render contact list with filter
+  function renderContacts() {
+    const list = document.getElementById('contactList');
+    const filter = document.getElementById('search').value.toLowerCase();
+    list.innerHTML = '';
+    contacts.filter(c => c.name.toLowerCase().includes(filter))
+            .forEach((contact, index) => {
+      const div = document.createElement('div');
+      div.className = 'contact';
+      div.innerText = contact.name;
+
+      // Add delete 'X' button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '✖';
+      deleteBtn.title = translations[currentLang].confirmDelete;
+      deleteBtn.style.marginLeft = '10px';
+      deleteBtn.style.background = 'transparent';
+      deleteBtn.style.color = '#ff6666';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm(translations[currentLang].confirmDelete)) {
+          contacts.splice(index, 1);
+          saveContacts();
+          renderContacts();
+          if (selectedContact === index) {
+            clearDetails();
+          }
+        }
+      };
+      div.appendChild(deleteBtn);
+
+      div.onclick = () => selectContact(index);
+      list.appendChild(div);
+    });
+  }
+
+  // Add new contact
+  function addContact() {
+    const newName = document.getElementById('newContact').value.trim();
+    if (newName && !contacts.find(c => c.name === newName)) {
+      contacts.push({name: newName, message: '', address: '', phone: '', email: ''});
+      saveContacts();
+      renderContacts();
+      document.getElementById('newContact').value = '';
     }
+  }
 
-    function renderContacts() {
-      const list = document.getElementById('contactList');
-      const filter = document.getElementById('search').value.toLowerCase();
-      list.innerHTML = '';
-      contacts
-        .filter(c => c.name.toLowerCase().includes(filter))
-        .forEach((contact, index) => {
-          const div = document.createElement('div');
-          div.className = 'contact';
-          div.innerHTML = `<span>${contact.name}</span><span class="delete-btn" title="Delete contact" onclick="event.stopPropagation(); deleteContact(${index})">×</span>`;
-          div.onclick = () => selectContact(index);
-          list.appendChild(div);
-        });
+  // Select contact for editing
+  function selectContact(index) {
+    selectedContact = index;
+    document.getElementById('contactName').value = contacts[index].name;
+    document.getElementById('contactMessage').value = contacts[index].message;
+    document.getElementById('contactAddress').value = contacts[index].address;
+    document.getElementById('contactPhone').value = contacts[index].phone;
+    document.getElementById('contactEmail').value = contacts[index].email;
+  }
+
+  // Clear contact detail fields
+  function clearDetails() {
+    selectedContact = null;
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactMessage').value = '';
+    document.getElementById('contactAddress').value = '';
+    document.getElementById('contactPhone').value = '';
+    document.getElementById('contactEmail').value = '';
+  }
+
+  // Save edited details
+  function saveDetails() {
+    if (selectedContact !== null) {
+      contacts[selectedContact].name = document.getElementById('contactName').value;
+      contacts[selectedContact].message = document.getElementById('contactMessage').value;
+      contacts[selectedContact].address = document.getElementById('contactAddress').value;
+      contacts[selectedContact].phone = document.getElementById('contactPhone').value;
+      contacts[selectedContact].email = document.getElementById('contactEmail').value;
+      saveContacts();
+      renderContacts();
     }
+  }
 
-    function selectContact(index) {
-      selectedContact = index;
-      document.getElementById('contactName').value = contacts[index].name;
-      document.getElementById('contactMessage').value = contacts[index].message;
-      document.getElementById('contactAddress').value = contacts[index].address;
-      document.getElementById('contactPhone').value = contacts[index].phone;
-      document.getElementById('contactEmail').value = contacts[index].email;
-    }
+  // Export CSV
+  function exportCSV() {
+    let csv = 'Name,Message,Address,Phone,Email\n';
+    contacts.forEach(c => {
+      csv += `"${c.name}","${c.message}","${c.address}","${c.phone}","${c.email}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'contacts.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
-    function saveDetails() {
-      if (selectedContact !== null) {
-        contacts[selectedContact].name = document.getElementById('contactName').value;
-        contacts[selectedContact].message = document.getElementById('contactMessage').value;
-        contacts[selectedContact].address = document.getElementById('contactAddress').value;
-        contacts[selectedContact].phone = document.getElementById('contactPhone').value;
-        contacts[selectedContact].email = document.getElementById('contactEmail').value;
-        saveContacts();
-        renderContacts();
-      }
-    }
+  // Export PDF
+  function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text('RolodeX Contacts', 10, 10);
+    let y = 20;
+    contacts.forEach((c, index) => {
+      doc.text(`${index + 1}. Name: ${c.name}`, 10, y); y += 10;
+      doc.text(`   Message: ${c.message}`, 10, y); y += 10;
+      doc.text(`   Address: ${c.address}`, 10, y); y += 10;
+      doc.text(`   Phone: ${c.phone}`, 10, y); y += 10;
+      doc.text(`   Email: ${c.email}`, 10, y); y += 10;
+    });
+    doc.save('contacts.pdf');
+  }
 
-    function deleteContact(index) {
-      if (confirm(`Are you sure you want to delete "${contacts[index].name}"?`)) {
-        if (selectedContact === index) selectedContact = null;
-        contacts.splice(index, 1);
-        saveContacts();
-        renderContacts();
-        clearDetails();
-      }
-    }
-
-    function clearDetails() {
-      document.getElementById('contactName').value = '';
-      document.getElementById('contactMessage').value = '';
-      document.getElementById('contactAddress').value = '';
-      document.getElementById('contactPhone').value = '';
-      document.getElementById('contactEmail').value = '';
-    }
-
-    function exportCSV() {
-      let csv = 'Name,Message,Address,Phone,Email\n';
-      contacts.forEach(c => {
-        csv += `"${c.name}","${c.message}","${c.address}","${c.phone}","${c.email}"\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'contacts.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text('RolodeX Contacts', 10, 10);
-      let y = 20;
-      contacts.forEach((c, index) => {
-        doc.text(`${index + 1}. Name: ${c.name}`, 10, y);
-        y += 10;
-        doc.text(`   Message: ${c.message}`, 10, y);
-        y += 10;
-        doc.text(`   Address: ${c.address}`, 10, y);
-        y += 10;
-        doc.text(`   Phone: ${c.phone}`, 10, y);
-        y += 10;
-        doc.text(`   Email: ${c.email}`, 10, y);
-        y += 10;
-        if (y > 270) { doc.addPage(); y = 10; }
-      });
-      doc.save('contacts.pdf');
-    }
-
-    function toggleSettings() {
-      const panel = document.getElementById('settingsPanel');
-      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function toggleColorBlind() {
-      const isChecked = document.getElementById('colorBlindToggle').checked;
-      document.body.classList.toggle('colorblind', isChecked);
-      localStorage.setItem('colorBlindMode', isChecked);
-    }
-
-    function loadColorBlindMode() {
-      const saved = localStorage.getItem('colorBlindMode') === 'true';
-      document.getElementById('colorBlindToggle').checked = saved;
-      document.body.classList.toggle('colorblind', saved);
-    }
-
-    function clearAllData() {
-      if (confirm('Are you sure you want to clear all contact data? This cannot be undone.')) {
-        contacts = [];
-        saveContacts();
-        renderContacts();
-        clearDetails();
-      }
-    }
-
-    function changeLanguage() {
-      const lang = document.getElementById('languageSelect').value;
-      alert(`Language changed to: ${lang} (not implemented)`);
-    }
-
-    renderContacts();
-    loadColorBlindMode();
-  </script>
-</body>
-</html>
+  // Toggle contact list visibility
+  function toggleContactList() {
+    const list = document.getElementById('contactList');
+    const btn =
