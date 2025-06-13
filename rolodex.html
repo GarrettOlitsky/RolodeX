@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,10 +65,14 @@
     <button onclick="exportCSV()">Export CSV</button>
     <button onclick="exportPDF()">Export PDF</button>
   </div>
+
   <div id="details">
     <h2>Contact Details</h2>
     <input type="text" id="contactName" placeholder="Name">
     <textarea id="contactMessage" placeholder="Message"></textarea>
+    <input type="text" id="contactAddress" placeholder="Address">
+    <input type="text" id="contactPhone" placeholder="Phone Number">
+    <input type="text" id="contactEmail" placeholder="Email">
     <button onclick="saveDetails()">Save</button>
   </div>
 
@@ -85,7 +88,7 @@
     function addContact() {
       const newName = document.getElementById('newContact').value.trim();
       if (newName && !contacts.find(c => c.name === newName)) {
-        contacts.push({name: newName, message: ''});
+        contacts.push({name: newName, message: '', address: '', phone: '', email: ''});
         saveContacts();
         renderContacts();
         document.getElementById('newContact').value = '';
@@ -110,21 +113,27 @@
       selectedContact = index;
       document.getElementById('contactName').value = contacts[index].name;
       document.getElementById('contactMessage').value = contacts[index].message;
+      document.getElementById('contactAddress').value = contacts[index].address;
+      document.getElementById('contactPhone').value = contacts[index].phone;
+      document.getElementById('contactEmail').value = contacts[index].email;
     }
 
     function saveDetails() {
       if (selectedContact !== null) {
         contacts[selectedContact].name = document.getElementById('contactName').value;
         contacts[selectedContact].message = document.getElementById('contactMessage').value;
+        contacts[selectedContact].address = document.getElementById('contactAddress').value;
+        contacts[selectedContact].phone = document.getElementById('contactPhone').value;
+        contacts[selectedContact].email = document.getElementById('contactEmail').value;
         saveContacts();
         renderContacts();
       }
     }
 
     function exportCSV() {
-      let csv = 'Name,Message\n';
+      let csv = 'Name,Message,Address,Phone,Email\n';
       contacts.forEach(c => {
-        csv += `"${c.name}","${c.message}"\n`;
+        csv += `"${c.name}","${c.message}","${c.address}","${c.phone}","${c.email}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -145,6 +154,12 @@
         doc.text(`${index + 1}. Name: ${c.name}`, 10, y);
         y += 10;
         doc.text(`   Message: ${c.message}`, 10, y);
+        y += 10;
+        doc.text(`   Address: ${c.address}`, 10, y);
+        y += 10;
+        doc.text(`   Phone: ${c.phone}`, 10, y);
+        y += 10;
+        doc.text(`   Email: ${c.email}`, 10, y);
         y += 10;
       });
       doc.save('contacts.pdf');
