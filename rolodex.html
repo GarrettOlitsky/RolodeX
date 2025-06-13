@@ -10,33 +10,12 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     height: 100vh;
-    background-color: var(--bg);
-    color: var(--fg);
-    transition: background-color 0.3s, color 0.3s;
-  }
-  :root {
-    --bg: #1e1e2f;
-    --fg: #f4f4f4;
-    --sidebar-bg: #292940;
-    --contact-bg: #3a3a5c;
-    --contact-hover: #505070;
-    --button-bg: #4caf50;
-    --button-hover: #45a049;
-    --input-bg: #444466;
-  }
-  .light {
-    --bg: #f9f9f9;
-    --fg: #222;
-    --sidebar-bg: #ddd;
-    --contact-bg: #bbb;
-    --contact-hover: #aaa;
-    --button-bg: #4caf50;
-    --button-hover: #45a049;
-    --input-bg: #eee;
+    background-color: #1e1e2f;
+    color: #f4f4f4;
   }
   #sidebar {
     width: 280px;
-    background-color: var(--sidebar-bg);
+    background-color: #292940;
     padding: 10px;
     overflow-y: auto;
   }
@@ -51,12 +30,12 @@
     margin-bottom: 10px;
     border-radius: 4px;
     border: none;
-    background-color: var(--input-bg);
-    color: var(--fg);
+    background-color: #444466;
+    color: #f4f4f4;
   }
   #toggleContactsBtn {
     width: 100%;
-    background: var(--button-bg);
+    background: #4caf50;
     color: white;
     border: none;
     border-radius: 4px;
@@ -65,7 +44,7 @@
     margin-bottom: 10px;
   }
   #toggleContactsBtn:hover {
-    background: var(--button-hover);
+    background: #45a049;
   }
   #contactList {
     max-height: 300px;
@@ -73,7 +52,7 @@
     margin-bottom: 10px;
     border: 1px solid #8888aa;
     border-radius: 4px;
-    background-color: var(--contact-bg);
+    background-color: #3a3a5c;
   }
   .contact {
     display: flex;
@@ -87,7 +66,7 @@
     border-bottom: none;
   }
   .contact:hover {
-    background-color: var(--contact-hover);
+    background-color: #505070;
   }
   .contact-name {
     flex-grow: 1;
@@ -110,8 +89,8 @@
   input, textarea {
     border: none;
     border-radius: 4px;
-    background-color: var(--input-bg);
-    color: var(--fg);
+    background-color: #444466;
+    color: #f4f4f4;
     box-sizing: border-box;
     margin: 6px 0;
     font-size: 15px;
@@ -129,7 +108,7 @@
   }
   button {
     width: 100%;
-    background-color: var(--button-bg);
+    background-color: #4caf50;
     color: white;
     border: none;
     border-radius: 4px;
@@ -139,12 +118,12 @@
     font-size: 16px;
   }
   button:hover {
-    background-color: var(--button-hover);
+    background-color: #45a049;
   }
   #details {
     flex-grow: 1;
     padding: 20px;
-    background-color: var(--sidebar-bg);
+    background-color: #292940;
     overflow-y: auto;
   }
   #fileInput {
@@ -152,19 +131,6 @@
   }
   #bottomButtons {
     margin-top: 10px;
-  }
-  #darkLightToggle {
-    margin-bottom: 15px;
-    background: var(--button-bg);
-    color: white;
-    border: none;
-    padding: 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    user-select: none;
-  }
-  #darkLightToggle:hover {
-    background: var(--button-hover);
   }
 </style>
 </head>
@@ -183,7 +149,6 @@
       <button onclick="exportPDF()">Export PDF</button>
       <button onclick="triggerImport()">Import JSON</button>
       <input type="file" id="fileInput" accept=".json" onchange="importJSON(event)" />
-      <button id="darkLightToggle" onclick="toggleDarkLight()">Toggle Dark/Light</button>
     </div>
   </div>
 
@@ -229,13 +194,13 @@
       const filter = document.getElementById('search').value.toLowerCase();
       list.innerHTML = '';
 
-      const filtered = contacts.filter(c => c.name.toLowerCase().includes(filter));
-
       if (!contactsVisible) {
         list.style.display = 'none';
         return;
       }
       list.style.display = 'block';
+
+      const filtered = contacts.filter(c => c.name.toLowerCase().includes(filter));
 
       filtered.forEach((contact, index) => {
         const div = document.createElement('div');
@@ -416,21 +381,8 @@
       event.target.value = '';
     }
 
-    function toggleDarkLight() {
-      document.body.classList.toggle('light');
-      if (document.body.classList.contains('light')) {
-        localStorage.setItem('rolodexTheme', 'light');
-      } else {
-        localStorage.setItem('rolodexTheme', 'dark');
-      }
-    }
-
     window.onload = () => {
       renderContacts();
-      const savedTheme = localStorage.getItem('rolodexTheme');
-      if (savedTheme === 'light') {
-        document.body.classList.add('light');
-      }
     };
   </script>
 </body>
