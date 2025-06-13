@@ -1,2 +1,2 @@
 # RolodeX
-## Contact list with pdf and csv capabiltiies. 
+## Contact list with .pdf and .csv capabiltiies. 
