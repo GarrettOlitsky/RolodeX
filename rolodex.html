@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RolodeX App</title>
   <style>
     body {
@@ -12,12 +12,20 @@
       display: flex;
       height: 100vh;
       margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.light {
+      background-color: #f4f4f4;
+      color: #1e1e2f;
     }
     #sidebar {
       width: 250px;
       background-color: #292940;
       padding: 10px;
       overflow-y: auto;
+    }
+    #sidebar.light {
+      background-color: #ddd;
     }
     #sidebar h2 {
       text-align: center;
@@ -29,28 +37,19 @@
       margin: 5px 0;
       cursor: pointer;
       border-radius: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     .contact:hover {
       background: #505070;
-    }
-    .remove-btn {
-      background: red;
-      border: none;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
     }
     #details {
       flex-grow: 1;
       padding: 20px;
       background-color: #2e2e42;
     }
-    input, textarea, button {
+    #details.light {
+      background-color: #f9f9f9;
+    }
+    input, textarea, button, select {
       width: 100%;
       padding: 10px;
       margin: 8px 0;
@@ -65,23 +64,14 @@
     button:hover {
       background-color: #45a049;
     }
-    details {
-      margin-top: 10px;
-    }
-    summary {
-      cursor: pointer;
-      font-weight: bold;
-      background: #3a3a5c;
-      padding: 8px;
-      border-radius: 4px;
-    }
   </style>
 </head>
 <body>
   <div id="sidebar">
     <h2>RolodeX</h2>
+    <button onclick="toggleTheme()">Toggle Dark/Light</button>
     <input type="text" id="search" placeholder="Search..." oninput="renderContacts()">
-    <details open>
+    <details>
       <summary>Contact List</summary>
       <div id="contactList"></div>
     </details>
@@ -89,8 +79,8 @@
     <button onclick="addContact()">Add</button>
     <button onclick="exportCSV()">Export CSV</button>
     <button onclick="exportPDF()">Export PDF</button>
+    <button onclick="importJSON()">Import JSON</button>
   </div>
-
   <div id="details">
     <h2>Contact Details</h2>
     <input type="text" id="contactName" placeholder="Name">
@@ -98,10 +88,14 @@
     <input type="text" id="contactAddress" placeholder="Address">
     <input type="text" id="contactPhone" placeholder="Phone Number">
     <input type="text" id="contactEmail" placeholder="Email">
+    <input type="text" id="contactTags" placeholder="Tags (comma separated)">
+    <input type="date" id="contactBirthday" placeholder="Birthday">
     <button onclick="saveDetails()">Save</button>
+    <button onclick="deleteContact()">Delete Contact</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
   <script>
     let contacts = JSON.parse(localStorage.getItem('rolodexContacts')) || [];
     let selectedContact = null;
@@ -113,19 +107,10 @@
     function addContact() {
       const newName = document.getElementById('newContact').value.trim();
       if (newName && !contacts.find(c => c.name === newName)) {
-        contacts.push({name: newName, message: '', address: '', phone: '', email: ''});
+        contacts.push({name: newName, message: '', address: '', phone: '', email: '', tags: '', birthday: ''});
         saveContacts();
         renderContacts();
         document.getElementById('newContact').value = '';
-      }
-    }
-
-    function removeContact(index) {
-      if (confirm(`Are you sure you want to delete "${contacts[index].name}"?`)) {
-        contacts.splice(index, 1);
-        saveContacts();
-        renderContacts();
-        clearDetails();
       }
     }
 
@@ -137,48 +122,63 @@
               .forEach((contact, index) => {
         const div = document.createElement('div');
         div.className = 'contact';
-        div.innerHTML = `
-          <span onclick="selectContact(${index})">${contact.name}</span>
-          <button class="remove-btn" onclick="removeContact(${index}); event.stopPropagation();">X</button>
-        `;
+        div.innerText = contact.name;
+        div.onclick = () => selectContact(index);
         list.appendChild(div);
       });
     }
 
     function selectContact(index) {
       selectedContact = index;
-      document.getElementById('contactName').value = contacts[index].name;
-      document.getElementById('contactMessage').value = contacts[index].message;
-      document.getElementById('contactAddress').value = contacts[index].address;
-      document.getElementById('contactPhone').value = contacts[index].phone;
-      document.getElementById('contactEmail').value = contacts[index].email;
-    }
-
-    function clearDetails() {
-      selectedContact = null;
-      document.getElementById('contactName').value = '';
-      document.getElementById('contactMessage').value = '';
-      document.getElementById('contactAddress').value = '';
-      document.getElementById('contactPhone').value = '';
-      document.getElementById('contactEmail').value = '';
+      const c = contacts[index];
+      document.getElementById('contactName').value = c.name;
+      document.getElementById('contactMessage').value = c.message;
+      document.getElementById('contactAddress').value = c.address;
+      document.getElementById('contactPhone').value = c.phone;
+      document.getElementById('contactEmail').value = c.email;
+      document.getElementById('contactTags').value = c.tags;
+      document.getElementById('contactBirthday').value = c.birthday;
     }
 
     function saveDetails() {
       if (selectedContact !== null) {
-        contacts[selectedContact].name = document.getElementById('contactName').value;
-        contacts[selectedContact].message = document.getElementById('contactMessage').value;
-        contacts[selectedContact].address = document.getElementById('contactAddress').value;
-        contacts[selectedContact].phone = document.getElementById('contactPhone').value;
-        contacts[selectedContact].email = document.getElementById('contactEmail').value;
+        const c = contacts[selectedContact];
+        c.name = document.getElementById('contactName').value;
+        c.message = document.getElementById('contactMessage').value;
+        c.address = document.getElementById('contactAddress').value;
+        c.phone = document.getElementById('contactPhone').value;
+        c.email = document.getElementById('contactEmail').value;
+        c.tags = document.getElementById('contactTags').value;
+        c.birthday = document.getElementById('contactBirthday').value;
         saveContacts();
         renderContacts();
       }
     }
 
+    function deleteContact() {
+      if (selectedContact !== null && confirm('Are you sure you want to delete this contact?')) {
+        contacts.splice(selectedContact, 1);
+        selectedContact = null;
+        saveContacts();
+        renderContacts();
+        clearDetails();
+      }
+    }
+
+    function clearDetails() {
+      document.getElementById('contactName').value = '';
+      document.getElementById('contactMessage').value = '';
+      document.getElementById('contactAddress').value = '';
+      document.getElementById('contactPhone').value = '';
+      document.getElementById('contactEmail').value = '';
+      document.getElementById('contactTags').value = '';
+      document.getElementById('contactBirthday').value = '';
+    }
+
     function exportCSV() {
-      let csv = 'Name,Message,Address,Phone,Email\n';
+      let csv = 'Name,Message,Address,Phone,Email,Tags,Birthday\n';
       contacts.forEach(c => {
-        csv += `"${c.name}","${c.message}","${c.address}","${c.phone}","${c.email}"\n`;
+        csv += `"${c.name}","${c.message}","${c.address}","${c.phone}","${c.email}","${c.tags}","${c.birthday}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -195,19 +195,38 @@
       const doc = new jsPDF();
       doc.text('RolodeX Contacts', 10, 10);
       let y = 20;
-      contacts.forEach((c, index) => {
-        doc.text(`${index + 1}. Name: ${c.name}`, 10, y);
-        y += 10;
-        doc.text(`   Message: ${c.message}`, 10, y);
-        y += 10;
-        doc.text(`   Address: ${c.address}`, 10, y);
-        y += 10;
-        doc.text(`   Phone: ${c.phone}`, 10, y);
-        y += 10;
-        doc.text(`   Email: ${c.email}`, 10, y);
-        y += 10;
+      contacts.forEach((c, i) => {
+        doc.text(`${i+1}. Name: ${c.name}`, 10, y); y += 10;
+        doc.text(`   Message: ${c.message}`, 10, y); y += 10;
+        doc.text(`   Address: ${c.address}`, 10, y); y += 10;
+        doc.text(`   Phone: ${c.phone}`, 10, y); y += 10;
+        doc.text(`   Email: ${c.email}`, 10, y); y += 10;
+        doc.text(`   Tags: ${c.tags}`, 10, y); y += 10;
+        doc.text(`   Birthday: ${c.birthday}`, 10, y); y += 10;
       });
       doc.save('contacts.pdf');
+    }
+
+    function importJSON() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          contacts = JSON.parse(reader.result);
+          saveContacts();
+          renderContacts();
+        };
+        reader.readAsText(e.target.files[0]);
+      };
+      input.click();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      document.getElementById('sidebar').classList.toggle('light');
+      document.getElementById('details').classList.toggle('light');
     }
 
     renderContacts();
